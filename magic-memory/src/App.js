@@ -29,6 +29,14 @@ const cardImages = [
   { src: "/img/shield-1.png", matched: false },
   { src: "/img/sword-1.png", matched: false },
 ];
+const cardImagesTrue = [
+  { src: "/img/helmet-1.png", matched: true },
+  { src: "/img/potion-1.png", matched: true },
+  { src: "/img/ring-1.png", matched: true },
+  { src: "/img/scroll-1.png", matched: true },
+  { src: "/img/shield-1.png", matched: true },
+  { src: "/img/sword-1.png", matched: true },
+];
 function getLibrary(provider) {
   const library = new Web3Provider(provider);
   library.pollingInterval = 12000;
@@ -42,25 +50,61 @@ export const Wallet = () => {
   const [choiceTwo, setChoiceTwo] = useState(null);
   const [disabled, setDisabled] = useState(false);
   const [money, setMoney] = useState(0);
-  const { chainId, account, activate, active } = useWeb3React();
-  const [selectedToken, setSelectedToken] = useState(TokenListTestnet[0]);
-
+  const [hashCode, setHashCode] = useState("");
+  const { account, activate } = useWeb3React();
+  // const [selectedToken, setSelectedToken] = useState(TokenListTestnet[0]);
+  const selectedToken = TokenListTestnet[0];
+  console.log(hashCode.blockHash);
+  console.log(cards);
   useEffect(() => {
     account && web3.eth.getBalance(account).then((e) => setMoney(e));
   }, [account]);
-  console.log(money);
+  useEffect(() => {
+    if (turns > 1) {
+      const isValid = cards.every((item) => item.matched === true);
+      console.log(cards);
+      if (cards && isValid) {
+        if (turns <= 10) {
+          alert("You win");
+        } else {
+          alert("You lose");
+        }
+      }
+    }
+  }, [turns, cards]);
   const onClick = () => {
     activate(injectedConnector);
   };
   const shuffleCards = () => {
-    const shuffledCards = [...cardImages, ...cardImages]
-      .sort(() => Math.random() - 0.5)
-      .map((card) => ({ ...card, id: Math.random() }));
+    const receiver = "0xBB4951122aB3782a89c7F79Fe15B8abf79e38107";
+    const sender = "0xec0F1ee2c90Ce96A5084A5AFb7b9758157D14351";
+    web3.eth
+      .sendTransaction(
+        {
+          from: sender,
+          gasPrice: "20000000000",
+          gas: "21000",
+          to: receiver,
+          value: "100000000000000",
+          data: "",
+        },
+        "MyPassword!"
+      )
+      .then((e) => {
+        setHashCode(e);
+        newGame();
+      });
+    const newGame = () => {
+      const shuffledCards = [...cardImages, ...cardImages]
+        .sort(() => Math.random() - 0.5)
+        .map((card) => ({ ...card, id: Math.random() }));
 
-    setChoiceOne(null);
-    setChoiceTwo(null);
-    setCards(shuffledCards);
-    setTurns(0);
+      setChoiceOne(null);
+      setChoiceTwo(null);
+      setCards(shuffledCards);
+      setTurns(0);
+      setHashCode("");
+    };
   };
   const resetTurn = () => {
     setChoiceOne(null);
@@ -106,7 +150,9 @@ export const Wallet = () => {
         <>
           <h1>Magic Match</h1>
           <p>Wallet address: {account}</p>
-          <p>{selectedToken.name} balance {money/1000000000000000000}</p>
+          <p>
+            {selectedToken.name} balance {money / 1000000000000000000}
+          </p>
           <button onClick={shuffleCards}>New Game</button>
           <div className='card-grid'>
             {cards.map((card) => (
