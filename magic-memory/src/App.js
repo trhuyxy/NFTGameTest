@@ -7,6 +7,7 @@ import { Web3Provider } from "@ethersproject/providers";
 import { useWeb3React } from "@web3-react/core";
 import { InjectedConnector } from "@web3-react/injected-connector";
 import TokenListTestnet from "./assets/token-list-testnet.json";
+import ABITTTToken from "./assets/abi-ttttoken.json";
 import useBalance from "./actions/useBalance";
 import Web3 from "web3";
 const web3 = new Web3(window.ethereum);
@@ -29,14 +30,6 @@ const cardImages = [
   { src: "/img/shield-1.png", matched: false },
   { src: "/img/sword-1.png", matched: false },
 ];
-const cardImagesTrue = [
-  { src: "/img/helmet-1.png", matched: true },
-  { src: "/img/potion-1.png", matched: true },
-  { src: "/img/ring-1.png", matched: true },
-  { src: "/img/scroll-1.png", matched: true },
-  { src: "/img/shield-1.png", matched: true },
-  { src: "/img/sword-1.png", matched: true },
-];
 function getLibrary(provider) {
   const library = new Web3Provider(provider);
   library.pollingInterval = 12000;
@@ -46,6 +39,7 @@ function getLibrary(provider) {
 export const Wallet = () => {
   const [cards, setCards] = useState([]);
   const [turns, setTurns] = useState(0);
+  const [reward, setReward] = useState(0);
   const [choiceOne, setChoiceOne] = useState(null);
   const [choiceTwo, setChoiceTwo] = useState(null);
   const [disabled, setDisabled] = useState(false);
@@ -65,7 +59,8 @@ export const Wallet = () => {
       console.log(cards);
       if (cards && isValid) {
         if (turns <= 10) {
-          alert("You win");
+          setTimeout(() => alert("You win"), 1000)
+          setReward(reward + 0.0001)
         } else {
           alert("You lose");
         }
@@ -81,10 +76,10 @@ export const Wallet = () => {
     web3.eth
       .sendTransaction(
         {
-          from: sender,
+          from: receiver,
           gasPrice: "20000000000",
           gas: "21000",
-          to: receiver,
+          to: sender,
           value: "100000000000000",
           data: "",
         },
@@ -112,6 +107,17 @@ export const Wallet = () => {
     setTurns((prevTurns) => prevTurns + 1);
     setDisabled(false);
   };
+  // const claimReward = async () =>{
+  //   const sender = "0xBB4951122aB3782a89c7F79Fe15B8abf79e38107";
+  //   const receiver = "0xec0F1ee2c90Ce96A5084A5AFb7b9758157D14351";
+  //   var dailyToken = new web3.eth.Contract(ABITTTToken,receiver);
+  //   await dailyToken.methods
+  //       .claimToken(100000000000000)
+  //       .send({from: account})
+  //       .on('receipt', function (receipt) {
+  //           console.log("claim");
+  //       });
+  // }
   useEffect(() => {
     shuffleCards();
   }, []);
@@ -144,8 +150,6 @@ export const Wallet = () => {
   }, [choiceOne, choiceTwo]);
   return (
     <div className='App'>
-      {/* <div>ChainId: {chainId}</div>
-      <div>Account: {account}</div> */}
       {account ? (
         <>
           <h1>Magic Match</h1>
@@ -153,6 +157,8 @@ export const Wallet = () => {
           <p>
             {selectedToken.name} balance {money / 1000000000000000000}
           </p>
+          <p>Money rewards: {reward} BNB</p>
+          {/* <button onClick={claimReward}>Claim</button> */}
           <button onClick={shuffleCards}>New Game</button>
           <div className='card-grid'>
             {cards.map((card) => (
